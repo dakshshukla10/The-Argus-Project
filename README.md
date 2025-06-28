@@ -65,8 +65,8 @@ argus_protocol/
 ### 1. Environment Setup
 ```bash
 # Clone the repository
-git clone https://github.com/dakshshukla10/The-Argus-Project.git
-cd The-Argus-Project
+git clone https://github.com/dakshshukla10/The-Argus-Protocol.git
+cd The-Argus-Protocol
 
 # Create virtual environment
 python3 -m venv venv
