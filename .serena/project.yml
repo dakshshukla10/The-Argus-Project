@@ -1,0 +1,4 @@
+name: argus_protocol
+language: python
+description: Real-time crowd analytics system for stampede risk prediction
+root_dir: .

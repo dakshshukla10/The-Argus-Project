@@ -1,0 +1,16 @@
+# Core AI/CV & Math
+ultralytics
+opencv-python
+numpy
+scipy
+sort-tracker
+
+# Backend Framework
+fastapi
+uvicorn[standard]
+websockets
+
+# Frontend Framework
+streamlit
+plotly
+pandas
