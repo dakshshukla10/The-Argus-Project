@@ -18,12 +18,15 @@ import math
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from engine.detection import PersonDetector
+from engine.core_pipeline import ArgusCorePipeline
 from config import VIDEO_RESOLUTION, PROCESSING_FPS
+import json
 
 app = FastAPI(title="Argus Protocol Backend", description="Real-time crowd analytics system")
 
 # Initialize components
 detector = PersonDetector()
+core_pipeline = ArgusCorePipeline()
 
 @app.get("/")
 async def root():
@@ -116,8 +119,12 @@ async def video_stream():
                 _, buffer = cv2.imencode('.jpg', processed_frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
                 
                 # Yield frame in multipart format
-                yield (b'--frame\r\n'
-                       b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+                yield (b'--frame
+'
+                       b'Content-Type: image/jpeg
+
+' + buffer.tobytes() + b'
+')
                 
                 frame_count += 1
                 
@@ -131,6 +138,84 @@ async def video_stream():
                 cap.release()
     
     return StreamingResponse(generate_frames(), media_type="multipart/x-mixed-replace; boundary=frame")
+
+@app.get("/analytics_stream")
+async def analytics_stream():
+    """
+    Advanced video streaming with full analytics pipeline.
+    This satisfies Task 3 milestone: SORT tracking + 3 core metrics calculation with console output.
+    """
+    def generate_analytics_frames():
+        # Try to open webcam first, fallback to test pattern generation
+        cap = cv2.VideoCapture(0)
+        frame_count = 0
+        
+        # If webcam is not available, we'll generate test patterns
+        use_webcam = cap.isOpened()
+        
+        try:
+            while True:
+                if use_webcam:
+                    ret, frame = cap.read()
+                    if not ret:
+                        # If webcam fails, switch to test pattern
+                        use_webcam = False
+                        cap.release()
+                        frame = create_test_pattern_with_motion(frame_count)
+                    else:
+                        # Resize webcam frame to target resolution
+                        frame = cv2.resize(frame, VIDEO_RESOLUTION)
+                else:
+                    # Generate test pattern with simulated motion
+                    frame = create_test_pattern_with_motion(frame_count)
+                
+                # Process frame through complete pipeline
+                processed_frame, analytics_data = core_pipeline.process_frame(frame)
+                
+                # Print analytics to console (Task 3 milestone requirement)
+                if frame_count % 15 == 0:  # Print every second (15 FPS)
+                    print("
+" + "="*60)
+                    print(f"🎯 ARGUS ANALYTICS - Frame {analytics_data['frame_count']}")
+                    print("="*60)
+                    print(f"📊 Person Count: {analytics_data['person_count']}")
+                    print(f"🏘️  Max Density: {analytics_data['density']['max_density']:.1f} persons/cell")
+                    print(f"🌊 Motion Coherence: {analytics_data['motion_coherence']['std_deviation']:.1f}° std dev")
+                    print(f"⚡ Kinetic Energy: {analytics_data['kinetic_energy']['current']:.2f}")
+                    print(f"📈 KE Moving Avg: {analytics_data['kinetic_energy']['moving_average']:.2f}")
+                    print(f"🚨 Status: {analytics_data['status']}")
+                    if analytics_data['kinetic_energy']['spike_detected']:
+                        print("⚠️  KINETIC ENERGY SPIKE DETECTED!")
+                    print("="*60)
+                
+                # Add source info
+                cv2.putText(processed_frame, f"Source: {'Webcam' if use_webcam else 'Test Pattern'}", 
+                           (10, VIDEO_RESOLUTION[1] - 20), 
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+                
+                # Encode frame as JPEG
+                _, buffer = cv2.imencode('.jpg', processed_frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
+                
+                # Yield frame in multipart format
+                yield (b'--frame
+'
+                       b'Content-Type: image/jpeg
+
+' + buffer.tobytes() + b'
+')
+                
+                frame_count += 1
+                
+                # Control frame rate
+                time.sleep(1.0 / PROCESSING_FPS)
+                
+        except Exception as e:
+            print(f"Error in analytics stream: {e}")
+        finally:
+            if cap.isOpened():
+                cap.release()
+    
+    return StreamingResponse(generate_analytics_frames(), media_type="multipart/x-mixed-replace; boundary=frame")
 
 @app.get("/test_frame_with_video")
 async def get_test_frame_with_video():
