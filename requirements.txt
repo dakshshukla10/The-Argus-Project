@@ -1,17 +1,17 @@
 # Core AI/CV & Math
-ultralytics
-opencv-python
-numpy
-scipy
+ultralytics==8.3.160
+opencv-python==4.11.0.86
+numpy==2.3.1
+scipy==1.16.0
 # sort-tracker  # Using custom implementation
 
 # Backend Framework
-fastapi
-uvicorn[standard]
-websockets
+fastapi==0.115.14
+uvicorn[standard]==0.35.0
+websockets==14.1
 
 # Frontend Framework
-streamlit
-plotly
-pandas
-websocket-client
+streamlit==1.46.1
+plotly==6.2.0
+pandas==2.3.0
+websocket-client==1.8.0

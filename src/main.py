@@ -68,7 +68,9 @@ async def get_test_frame():
         return Response(content=buffer.tobytes(), media_type="image/jpeg")
         
     except Exception as e:
-        return {"error": f"Failed to process frame: {str(e)}"}
+        # Log detailed error for debugging
+        print(f"Frame processing error: {str(e)}")
+        return {"error": "Frame processing failed. Please check server logs."}
 
 @app.get("/test_frame_with_video")
 async def get_test_frame_with_video():
@@ -112,7 +114,9 @@ async def get_test_frame_with_video():
         return Response(content=buffer.tobytes(), media_type="image/jpeg")
         
     except Exception as e:
-        return {"error": f"Failed to process video frame: {str(e)}"}
+        # Log detailed error for debugging  
+        print(f"Video frame processing error: {str(e)}")
+        return {"error": "Video frame processing failed. Please check server logs."}
 
 @app.get("/video_stream")
 async def video_stream():

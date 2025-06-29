@@ -29,8 +29,9 @@ KE_SPIKE_FACTOR = 2.0  # A 2x spike over moving average is a warning
 KE_MOVING_AVG_WINDOW = 45  # frames (3 seconds @ 15fps)
 
 # --- Server Config ---
-BACKEND_HOST = "127.0.0.1"
-BACKEND_PORT = 8000
+import os
+BACKEND_HOST = os.getenv('ARGUS_HOST', '127.0.0.1')
+BACKEND_PORT = int(os.getenv('ARGUS_PORT', '8000'))
 WEBSOCKET_ENDPOINT = "/ws"
 VIDEO_STREAM_ENDPOINT = "/video_stream"
 

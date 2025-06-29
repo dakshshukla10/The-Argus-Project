@@ -48,6 +48,16 @@ class ArgusCorePipeline:
         Returns:
             Tuple of (processed_frame, analytics_data)
         """
+        # Input validation
+        if frame is None:
+            raise ValueError("Frame cannot be None")
+        if frame.size == 0:
+            raise ValueError("Frame cannot be empty")
+        if len(frame.shape) != 3 or frame.shape[2] != 3:
+            raise ValueError("Frame must be a 3-channel color image")
+        if frame.dtype != np.uint8:
+            raise ValueError("Frame must be uint8 type")
+            
         self.frame_count += 1
         
         # Step 1: Person Detection

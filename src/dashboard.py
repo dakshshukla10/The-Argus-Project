@@ -17,6 +17,7 @@ import threading
 import queue
 from datetime import datetime, timedelta
 import numpy as np
+from collections import deque
 
 # Page configuration
 st.set_page_config(
@@ -33,7 +34,7 @@ VIDEO_STREAM_URL = f"{BACKEND_URL}/analytics_stream"
 
 # Initialize session state
 if 'analytics_data' not in st.session_state:
-    st.session_state.analytics_data = []
+    st.session_state.analytics_data = deque(maxlen=500)  # More efficient than list truncation
 if 'websocket_connected' not in st.session_state:
     st.session_state.websocket_connected = False
 if 'data_queue' not in st.session_state:
@@ -160,10 +161,7 @@ def main():
         try:
             new_data = st.session_state.data_queue.get_nowait()
             st.session_state.analytics_data.append(new_data)
-            
-            # Keep only recent data points
-            if len(st.session_state.analytics_data) > max_data_points:
-                st.session_state.analytics_data = st.session_state.analytics_data[-max_data_points:]
+            # Note: deque automatically maintains maxlen, no manual truncation needed
         except queue.Empty:
             break
     
