@@ -3,7 +3,7 @@ ultralytics
 opencv-python
 numpy
 scipy
-sort-tracker
+# sort-tracker  # Using custom implementation
 
 # Backend Framework
 fastapi
@@ -14,3 +14,4 @@ websockets
 streamlit
 plotly
 pandas
+websocket-client

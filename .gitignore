@@ -79,3 +79,7 @@ dmypy.json
 
 # Serena
 .serena/memories/
+.serena/cache/
+
+# Claude conversation files
+claude.md
