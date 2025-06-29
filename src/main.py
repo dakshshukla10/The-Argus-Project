@@ -332,6 +332,61 @@ async def websocket_analytics(websocket: WebSocket):
         if cap.isOpened():
             cap.release()
 
+@app.get("/demo/{scenario_type}")
+async def demo_scenario_stream(scenario_type: str):
+    """
+    Demo scenario streaming for Task 5 refinement and presentation.
+    Available scenarios: normal, warning, critical, stampede
+    """
+    valid_scenarios = ["normal", "warning", "critical", "stampede"]
+    if scenario_type not in valid_scenarios:
+        return {"error": f"Invalid scenario. Choose from: {valid_scenarios}"}
+    
+    def generate_demo_frames():
+        frame_count = 0
+        
+        try:
+            while True:
+                # Generate demo scenario frame
+                frame = create_demo_scenario(scenario_type, frame_count)
+                
+                # Process frame through complete pipeline
+                processed_frame, analytics_data = core_pipeline.process_frame(frame)
+                
+                # Print analytics to console for demo
+                if frame_count % 15 == 0:  # Print every second
+                    print("\n" + "="*60)
+                    print(f"🎬 DEMO SCENARIO: {scenario_type.upper()}")
+                    print("="*60)
+                    print(f"📊 Person Count: {analytics_data['person_count']}")
+                    print(f"🏘️  Max Density: {analytics_data['density']['max_density']:.1f} persons/cell")
+                    print(f"🌊 Motion Coherence: {analytics_data['motion_coherence']['std_deviation']:.1f}° std dev")
+                    print(f"⚡ Kinetic Energy: {analytics_data['kinetic_energy']['current']:.2f}")
+                    print(f"🚨 Status: {analytics_data['status']}")
+                    print("="*60)
+                
+                # Add scenario info to frame
+                cv2.putText(processed_frame, f"Demo: {scenario_type.title()}", 
+                           (10, processed_frame.shape[0] - 20), 
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
+                
+                # Encode frame as JPEG
+                _, buffer = cv2.imencode('.jpg', processed_frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
+                
+                # Yield frame in multipart format
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+                
+                frame_count += 1
+                
+                # Control frame rate
+                time.sleep(1.0 / PROCESSING_FPS)
+                
+        except Exception as e:
+            print(f"Error in demo scenario stream: {e}")
+    
+    return StreamingResponse(generate_demo_frames(), media_type="multipart/x-mixed-replace; boundary=frame")
+
 def create_test_pattern_with_motion(frame_count: int) -> np.ndarray:
     """Create a test pattern frame with animated elements to simulate motion."""
     frame = np.zeros((VIDEO_RESOLUTION[1], VIDEO_RESOLUTION[0], 3), dtype=np.uint8)
@@ -392,12 +447,33 @@ def create_test_pattern() -> np.ndarray:
     
     return frame
 
+def create_demo_scenario(scenario_type: str, frame_count: int) -> np.ndarray:
+    """Create demo scenarios for Task 5 refinement and demonstration"""
+    from demo_scenarios import DemoScenarioGenerator
+    
+    generator = DemoScenarioGenerator(VIDEO_RESOLUTION)
+    generator.frame_count = frame_count
+    
+    if scenario_type == "normal":
+        return generator.create_normal_crowd_scenario()
+    elif scenario_type == "warning":
+        return generator.create_warning_crowd_scenario()
+    elif scenario_type == "critical":
+        return generator.create_critical_crowd_scenario()
+    elif scenario_type == "stampede":
+        return generator.create_stampede_scenario()
+    else:
+        # Default to normal
+        return generator.create_normal_crowd_scenario()
+
 if __name__ == "__main__":
     import uvicorn
     print("🚀 Starting Argus Protocol Backend...")
     print("✅ Task 1: Single frame processing with YOLO detections")
     print("✅ Task 2: Video streaming with YOLO detections")
     print("✅ Task 3: SORT tracking + 3 core metrics calculation")
+    print("✅ Task 4: WebSocket & Dashboard Integration")
+    print("✅ Task 5: Refinement & Demo Polish")
     print("")
     print("📡 Available endpoints:")
     print("  - http://127.0.0.1:8000/ (API status)")
@@ -406,6 +482,12 @@ if __name__ == "__main__":
     print("  - http://127.0.0.1:8000/analytics_stream (FULL ANALYTICS PIPELINE)")
     print("  - http://127.0.0.1:8000/test_frame_with_video (webcam or test pattern)")
     print("  - ws://127.0.0.1:8000/ws/analytics (WebSocket for real-time analytics)")
+    print("")
+    print("🎬 DEMO SCENARIOS (Task 5):")
+    print("  - http://127.0.0.1:8000/demo/normal (Normal crowd scenario)")
+    print("  - http://127.0.0.1:8000/demo/warning (Warning crowd scenario)")  
+    print("  - http://127.0.0.1:8000/demo/critical (Critical crowd scenario)")
+    print("  - http://127.0.0.1:8000/demo/stampede (Stampede scenario)")
     print("")
     print("🎯 For LIVE ANALYTICS with console output:")
     print("   👉 Open: http://127.0.0.1:8000/analytics_stream")

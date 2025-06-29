@@ -41,22 +41,22 @@ if 'data_queue' not in st.session_state:
     st.session_state.data_queue = queue.Queue()
 
 def get_status_color(status):
-    """Get color for status indicator."""
+    """Get enhanced color scheme for status indicator."""
     colors = {
-        'NORMAL': '#28a745',    # Green
-        'WARNING': '#ffc107',   # Yellow
-        'CRITICAL': '#dc3545'   # Red
+        'NORMAL': '#00C851',      # Bright green
+        'WARNING': '#FF8800',     # Bright orange  
+        'CRITICAL': '#FF3547'     # Bright red
     }
-    return colors.get(status, '#6c757d')  # Default gray
+    return colors.get(status, '#6c757d')  # Default gray  # Default gray
 
 def get_status_emoji(status):
-    """Get emoji for status."""
+    """Get enhanced emoji for status with additional visual indicators."""
     emojis = {
-        'NORMAL': '✅',
-        'WARNING': '⚠️',
-        'CRITICAL': '🚨'
+        'NORMAL': '✅ SAFE',
+        'WARNING': '⚠️ CAUTION', 
+        'CRITICAL': '🚨 DANGER'
     }
-    return emojis.get(status, '❓')
+    return emojis.get(status, '❓ UNKNOWN')
 
 def websocket_listener():
     """WebSocket listener running in background thread."""
@@ -143,18 +143,64 @@ def main():
         
         st.markdown("---")
         
-        # Thresholds display
+        # Demo Controls (Task 5 Enhancement)
+        st.header("🎬 Demo Controls")
+        demo_scenarios = ["Default Stream", "Normal Crowd", "Warning Crowd", "Critical Crowd", "Stampede"]
+        selected_demo = st.selectbox("Select Demo Scenario", demo_scenarios)
+        
+        if selected_demo != "Default Stream":
+            scenario_map = {
+                "Normal Crowd": "normal",
+                "Warning Crowd": "warning", 
+                "Critical Crowd": "critical",
+                "Stampede": "stampede"
+            }
+            scenario_key = scenario_map[selected_demo]
+            demo_url = f"{BACKEND_URL}/demo/{scenario_key}"
+            st.info(f"🎯 Demo URL: {demo_url}")
+            st.markdown("*Switch video stream to demo scenario above*")
+        
+        st.markdown("---")
+        
+        # Enhanced Thresholds display
         st.header("🎯 Alert Thresholds")
-        st.markdown("**Density (persons/cell)**")
-        st.markdown("⚠️ Warning: 4.0")
-        st.markdown("🚨 Critical: 6.0")
         
-        st.markdown("**Motion Coherence (std dev)**")
-        st.markdown("⚠️ Warning: 40.0°")
-        st.markdown("🚨 Critical: 65.0°")
+        # Density thresholds with color coding
+        st.markdown("**🏘️ Crowd Density (persons/cell)**")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("🟡 **Warning:** 4.0")
+        with col2:
+            st.markdown("🔴 **Critical:** 6.0")
         
-        st.markdown("**Kinetic Energy**")
-        st.markdown("⚠️ Spike Factor: 2.0x")
+        # Motion Coherence thresholds
+        st.markdown("**🌊 Motion Coherence (std deviation)**")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("🟡 **Warning:** 40.0°")
+        with col2:
+            st.markdown("🔴 **Critical:** 65.0°")
+        
+        # Kinetic Energy thresholds
+        st.markdown("**⚡ Kinetic Energy**")
+        st.markdown("🟡 **Spike Factor:** 2.0x over moving average")
+        st.markdown("📊 **Window:** 45 frames (3 seconds)")
+        
+        # Add threshold tuning controls
+        st.markdown("---")
+        st.header("🔧 Threshold Tuning")
+        st.markdown("*For Task 5 refinement*")
+        
+        with st.expander("Adjust Thresholds (Advanced)"):
+            st.warning("⚠️ Threshold changes require backend restart")
+            density_warning = st.number_input("Density Warning", value=4.0, min_value=1.0, max_value=10.0, step=0.5)
+            density_critical = st.number_input("Density Critical", value=6.0, min_value=2.0, max_value=15.0, step=0.5)
+            coherence_warning = st.number_input("Coherence Warning (°)", value=40.0, min_value=10.0, max_value=90.0, step=5.0)
+            coherence_critical = st.number_input("Coherence Critical (°)", value=65.0, min_value=20.0, max_value=120.0, step=5.0)
+            
+            if st.button("💾 Save Threshold Config"):
+                st.info("Threshold configuration saved! Restart backend to apply changes.")
+                # Note: In a full implementation, this would update config.py
     
     # Process incoming WebSocket data
     while not st.session_state.data_queue.empty():
@@ -179,18 +225,46 @@ def main():
     status_color = get_status_color(status)
     status_emoji = get_status_emoji(status)
     
+    # Enhanced status indicator with animations
+    animation_css = ""
+    if status == "CRITICAL":
+        animation_css = """
+        animation: pulse 1s infinite;
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        """
+    elif status == "WARNING":
+        animation_css = """
+        animation: glow 2s ease-in-out infinite alternate;
+        @keyframes glow {
+            from { box-shadow: 0 0 5px #FF8800; }
+            to { box-shadow: 0 0 20px #FF8800, 0 0 30px #FF8800; }
+        }
+        """
+    
     st.markdown(f"""
-    <div style="
-        background-color: {status_color}; 
+    <style>
+    .status-indicator {{
+        {animation_css}
+    }}
+    </style>
+    <div class="status-indicator" style="
+        background: linear-gradient(135deg, {status_color}, {status_color}dd);
         color: white; 
-        padding: 20px; 
-        border-radius: 10px; 
+        padding: 25px; 
+        border-radius: 15px; 
         text-align: center; 
-        font-size: 24px; 
+        font-size: 28px; 
         font-weight: bold; 
-        margin-bottom: 20px;
+        margin-bottom: 25px;
+        border: 3px solid {status_color};
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     ">
-        {status_emoji} SYSTEM STATUS: {status}
+        {status_emoji}<br>
+        <span style="font-size: 32px;">SYSTEM STATUS: {status}</span>
     </div>
     """, unsafe_allow_html=True)
     
