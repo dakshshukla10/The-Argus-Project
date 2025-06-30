@@ -11,6 +11,10 @@
 **Organized by**: Bureau of Police Research & Development (BPR&D), Ministry of Home Affairs, Government of India  
 **Partners**: CyberPeace and National Crime Records Bureau (NCRB)
 
+**Team Name**: SOSityAI  
+**Team Members**: Daksh Shukla, Sayam Jain  
+**College**: Manipal Institute Of Technology
+
 ### **AI Innovation Focus**
 - Develop cutting-edge **AI and Machine Learning solutions** for CCTV surveillance enhancement
 - Address public safety challenges through **advanced AI computer vision and deep learning**
