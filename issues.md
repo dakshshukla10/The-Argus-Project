@@ -188,5 +188,5 @@ except:  # Too broad - hides bugs
 ---
 
 **Analysis completed**: [Current Date]
-**Analyzed by**: Claude (Sonnet 3.5)
+**Analyzed by**: Technical Review Team
 **Next steps**: Prioritize and fix Critical and Major bugs first
